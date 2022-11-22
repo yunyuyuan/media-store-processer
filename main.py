@@ -1,12 +1,12 @@
 import sys
 import time
-from os import popen
 from os import path
 import logging
 from logging.handlers import RotatingFileHandler
-from re import sub
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
+from src import exiftool
 
 logFile = path.join(path.dirname(__file__), 'exiftool.log')
 my_handler = RotatingFileHandler(logFile, mode='a', maxBytes=1024*1024,
@@ -19,14 +19,6 @@ app_log.setLevel(logging.INFO)
 
 app_log.addHandler(my_handler)
 
-def exiftool(path: str, dist: str):
-    cmd = f"exiftool '-FileName<CreateDate' -d {sub('/*$', '', dist)}/%Y/%m/%Y-%m-%d_%H:%M:%S.%%e {path}"
-    try:
-        output = popen(cmd).read()
-        app_log.info(output)
-    except Exception as e:
-        app_log.error(str(e))
-
 class MyHandler(FileSystemEventHandler):
     def __init__(self, src, dist) -> None:
         self.src = src
@@ -34,7 +26,7 @@ class MyHandler(FileSystemEventHandler):
         super().__init__()
 
     def on_created(self, event):
-        exiftool(self.src, self.dist)
+        exiftool(self.src, self.dist, app_log)
         return super().on_created(event)
 
 if __name__ == '__main__':
