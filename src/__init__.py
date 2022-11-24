@@ -26,7 +26,7 @@ def exiftool(app_log = None):
             },{
                 'tag': 'FileModifyDate',
                 'cond': 'not $CreateDate',
-                'format': '%Y/%m/%Y-%m-%d_%H-%M-%S%-c.%%e',
+                'format': '%Y/%m/%Y-%m-%d_%H-%M-%S%%-c.%%e',
             },
         ]:
             process = subprocess.Popen(_generate_cmd(
