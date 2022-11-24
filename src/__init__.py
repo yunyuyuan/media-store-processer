@@ -1,23 +1,60 @@
-from os import popen
+import subprocess
 from re import sub
+import shutil
 
-time_format = '%Y/%m/%Y-%m-%d_%H-%M-%S.%%e'
-time_format_p = '%Y/%m/%Y-%m-%d_%H-%M-%S%-c.%%e'
 recursive = False
-
-def get_cmd(tp: str, path: str, dist: str, cond: str, p: bool):
-    return f"/usr/bin/vendor_perl/exiftool '-FileName<{tp}' -d {sub('/*$', '', dist)}/{time_format_p if p else time_format} {path}{' -r' if recursive else ''} {cond}"
+copy = True
 
 def exiftool(path: str, dist: str, app_log = None):
     try:
-        for [tp, cond, p] in [['CreateDate', '', False], ['FileModifyDate', " -if 'not $CreateDate'", True]]:
-            output = popen(get_cmd(tp, path, dist, cond, p)).read()
+        for item in [
+            {
+                'tag': 'CreateDate',
+                'cond': '',
+                'format': '%Y/%m/%Y-%m-%d_%H-%M-%S.%%e',
+            },{
+                'tag': 'FileModifyDate',
+                'cond': 'not $CreateDate',
+                'format': '%Y/%m/%Y-%m-%d_%H-%M-%S%-c.%%e',
+            },
+        ]:
+            process = subprocess.Popen(generate_cmd(
+                    src=path,
+                    dist=dist,
+                    tag=item['tag'],
+                    format=item['format'],
+                    cond=item['cond'],
+                    copy=copy,
+                    recursive=recursive
+                ), 
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True)
+            code = process.wait()
+            out, err = process.communicate()
+            log = f"[out of <{item['tag']}>]:\n{err}\n{out}"
             if app_log:
-                app_log.info(output)
+                app_log.info(log)
             else:
-                print(output)
+                print(log)
     except Exception as e:
         if app_log:
-            app_log.error(str(e))
+            app_log.error('Python error:\n' + str(e))
         else:
-            print(str(e.with_traceback()))
+            print(str(e))
+
+def generate_cmd(src: str, dist: str, tag: str, format: str, cond: str, copy: bool, recursive: bool):
+    exif_bin = shutil.which('exiftool')
+    if not exif_bin:
+        raise(Exception('exiftool binary not found!'))
+    cmd = f"{exif_bin} '-FileName<{tag}'"
+    cmd += f" -d {sub('/*$', '', dist)}/{format}"
+    if copy:
+        cmd += ' -o .'
+    if recursive: 
+        cmd += ' -r'
+    if cond:
+        cmd += f" -if '{cond}'"
+    cmd += ' ' + src
+    return cmd
