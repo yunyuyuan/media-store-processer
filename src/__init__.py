@@ -56,11 +56,13 @@ def exiftool(app_log = None):
             print(str(e))
 
 def _generate_cmd(src: str, dist: str, tag: str, format: str, cond: str, copy: bool, recursive: bool):
-    exif_bin = shutil.which('exiftool')
-    if not exif_bin:
-        raise(Exception('exiftool binary not found!'))
+    #exif_bin = shutil.which('exiftool')
+    exif_bin = '/usr/bin/vendor_perl/exiftool'
+    #if not exif_bin:
+        #raise(Exception('exiftool binary not found!'))
     cmd = f"{exif_bin} '-FileName<{tag}'"
-    cmd += f" -d {sub('/*$', '', dist)}/{format}"
+    cmd += f" -d {sub('/*$', '', dist)}/"
+    cmd += format
     if copy:
         cmd += ' -o .'
     if recursive: 
