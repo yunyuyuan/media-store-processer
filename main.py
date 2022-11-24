@@ -1,4 +1,3 @@
-import sys
 import time
 from os import path
 import logging
@@ -6,7 +5,7 @@ from logging.handlers import RotatingFileHandler
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-from src import exiftool
+from src import exiftool, get_args
 
 logFile = path.join(path.dirname(__file__), 'exiftool.log')
 my_handler = RotatingFileHandler(logFile, mode='a', maxBytes=1024*1024,
@@ -20,20 +19,18 @@ app_log.setLevel(logging.INFO)
 app_log.addHandler(my_handler)
 
 class MyHandler(FileSystemEventHandler):
-    def __init__(self, src, dist) -> None:
-        self.src = src
-        self.dist = dist
+    def __init__(self) -> None:
         super().__init__()
 
     def on_created(self, event):
-        exiftool(self.src, self.dist, app_log)
+        exiftool(app_log)
         return super().on_created(event)
 
 if __name__ == '__main__':
-    [_, src, dist] = sys.argv
     observer = Observer()
-    handler = MyHandler(src, dist)
-    observer.schedule(handler, src, recursive=True)
+    handler = MyHandler()
+    args = get_args()
+    observer.schedule(handler, path=args.src, recursive=args.recursive)
     observer.start()
     try:
         while True:

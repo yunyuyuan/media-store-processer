@@ -1,11 +1,22 @@
+import argparse
 import subprocess
 from re import sub
 import shutil
 
-recursive = False
-copy = True
+def get_args():
+    parser = argparse.ArgumentParser(
+                    prog = 'Media Refolder',
+                    description = 'auto refold media files, using exiftool',
+                    epilog = '')
+    parser.add_argument('-s', '--src', required=True)
+    parser.add_argument('-d', '--dist', required=True)
+    parser.add_argument('-r', '--recursive', action='store_true', default=False)
+    parser.add_argument('-c', '--copy', action='store_true', default=False)
+    args = parser.parse_args()
+    return args
 
-def exiftool(path: str, dist: str, app_log = None):
+def exiftool(app_log = None):
+    args = get_args()
     try:
         for item in [
             {
@@ -18,14 +29,14 @@ def exiftool(path: str, dist: str, app_log = None):
                 'format': '%Y/%m/%Y-%m-%d_%H-%M-%S%-c.%%e',
             },
         ]:
-            process = subprocess.Popen(generate_cmd(
-                    src=path,
-                    dist=dist,
+            process = subprocess.Popen(_generate_cmd(
+                    src=args.src,
+                    dist=args.dist,
                     tag=item['tag'],
                     format=item['format'],
                     cond=item['cond'],
-                    copy=copy,
-                    recursive=recursive
+                    copy=args.copy,
+                    recursive=args.recursive
                 ), 
                 shell=True,
                 stdout=subprocess.PIPE,
@@ -44,7 +55,7 @@ def exiftool(path: str, dist: str, app_log = None):
         else:
             print(str(e))
 
-def generate_cmd(src: str, dist: str, tag: str, format: str, cond: str, copy: bool, recursive: bool):
+def _generate_cmd(src: str, dist: str, tag: str, format: str, cond: str, copy: bool, recursive: bool):
     exif_bin = shutil.which('exiftool')
     if not exif_bin:
         raise(Exception('exiftool binary not found!'))
