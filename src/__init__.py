@@ -12,6 +12,7 @@ def get_args():
     parser.add_argument('-d', '--dist', required=True)
     parser.add_argument('-r', '--recursive', action='store_true', default=False)
     parser.add_argument('-c', '--copy', action='store_true', default=False)
+    parser.add_argument('-i', '--interval', type=int, default=60)
     args = parser.parse_args()
     return args
 
