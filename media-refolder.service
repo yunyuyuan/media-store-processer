@@ -1,0 +1,13 @@
+[Unit]
+Description=auto media refolder
+
+[Service]
+Type=simple
+User=yunyuyuan
+ExecStart=/opt/codes/media-refolder/venv/bin/python /opt/codes/media-refolder/main.py -s /mnt/Nas/sync/Pictures/tmp -d /mnt/Nas/sync/Pictures/memories
+Restart=always
+RestartSec=300
+
+
+[Install]
+WantedBy=default.target
