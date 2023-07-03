@@ -65,6 +65,9 @@ def exiftool(_app_log = None):
             index = 0
             while 1:
                 file_dist = path.join(dist, f"{formatted_date}{f'-{index}' if index else ''}{file_extension}")
+                folder_dist = path.dirname(file_dist)
+                if not path.exists(folder_dist):
+                    os.makedirs(folder_dist)
                 if path.exists(file_dist):
                     index += 1
                 else:
