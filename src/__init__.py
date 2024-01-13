@@ -53,15 +53,19 @@ def exiftool(_app_log = None):
             file_src_quoted = "'" + file_src.replace("'", "'\\''") + "'"
             file_extension = os.path.splitext(filename)[1]
 
-            # get available time
-            available_time = run_command(f'{exif_path} -s -time:all {file_src_quoted}')
-            time_key = "CreateDate" if re.search('CreateDate', available_time) else "FileModifyDate"
-            # get the time
-            original_format = '%Y:%m:%d %H:%M:%S'
-            create_date = run_command(f'{exif_path} -d "{original_format}" -{time_key} -s3 {file_src_quoted}').strip()
-            new_format = '%Y/%m/%Y-%m-%d_%H-%M-%S'
-            formatted_date = datetime.datetime.strptime(create_date, original_format).strftime(new_format)
+            formatted_date = None
+            for time_key in ["CreateDate", "FileModifyDate"]:
+                try:
+                    original_format = '%Y:%m:%d %H:%M:%S'
+                    create_date = run_command(f'{exif_path} -d "{original_format}" -{time_key} -s3 {file_src_quoted}').strip()
+                    new_format = '%Y/%m/%Y-%m-%d_%H-%M-%S'
+                    formatted_date = datetime.datetime.strptime(create_date, original_format).strftime(new_format)
+                    break
+                except:
+                    pass
             
+            if formatted_date is None:
+                continue
             index = 0
             while 1:
                 file_dist = path.join(dist, f"{formatted_date}{f'-{index}' if index else ''}{file_extension}")
