@@ -19,7 +19,7 @@ def get_args():
                     epilog = '')
     parser.add_argument('-s', '--src', help='source dir.', required=True)
     parser.add_argument('-d', '--dist', help='source dir.', required=True)
-    parser.add_argument('-n', '--no_folder', help='don\'t create yyyy/MM folder for every item. default is false(create folder)', action='store_true', default=False)
+    parser.add_argument('-f', '--format', help='ouput file format, default is %Y/%m/%Y-%m-%d_%H-%M-%S', default='%Y/%m/%Y-%m-%d_%H-%M-%S')
     parser.add_argument('-r', '--recursive', help='recursive process. default is false', action='store_true', default=False)
     parser.add_argument('-c', '--copy', help='do copy instead of moving. default is false', action='store_true', default=False)
     args = parser.parse_args()
@@ -50,7 +50,7 @@ def exiftool(_app_log = None):
     args = get_args()
     src = args.src
     dist = args.dist
-    create_new_folder = not args.no_folder
+    date_format = args.format
     do_copy = args.copy
     try:
         files = glob.glob(path.normpath(src) + ('/**/*.*' if args.recursive else '/*.*'), recursive=args.recursive)
@@ -63,8 +63,7 @@ def exiftool(_app_log = None):
                 try:
                     original_format = '%Y:%m:%d %H:%M:%S'
                     create_date = run_command(f'{exif_path} -d "{original_format}" -{time_key} -s3 {file_src_quoted}').strip()
-                    new_format = '%Y/%m/%Y-%m-%d_%H-%M-%S' if create_new_folder else '%Y-%m-%d_%H-%M-%S'
-                    formatted_date = datetime.datetime.strptime(create_date, original_format).strftime(new_format)
+                    formatted_date = datetime.datetime.strptime(create_date, original_format).strftime(date_format)
                     break
                 except:
                     pass
